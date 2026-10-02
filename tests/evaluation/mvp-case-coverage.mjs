@@ -68,6 +68,7 @@ async function evaluateClassCommittee() {
   };
   const member = state.attachments[0].members.find(item => item.userId === '8200010001');
   const pending = state.attachments[0].members.find(item => item.userId === '8200010002');
+  const portableMemberPath = member?.filePath?.replaceAll('\\', '/') ?? '';
   const passed = state.automation?.domain === 'education'
     && confirmed.draft.status === 'compiled'
     && state.flows.length === 2
@@ -76,8 +77,8 @@ async function evaluateClassCommittee() {
     && duplicateRuns[0]?.runId === submitRuns[0]?.runId
     && remindRuns[0]?.status === 'succeeded'
     && member?.submissionStatus === 'submitted'
-    && member?.filePath?.startsWith('/demo/submissions/task_')
-    && member?.filePath?.endsWith('/MOCK001_合成成员甲.pdf')
+    && portableMemberPath.startsWith('/demo/submissions/task_')
+    && portableMemberPath.endsWith('/MOCK001_合成成员甲.pdf')
     && pending?.reminderStatus === 'sent'
     && state.adapters.replies.length === 1
     && state.adapters.directMessages.length === 1;
