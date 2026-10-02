@@ -1,0 +1,13 @@
+.DS_Store
+*.log
+*.tmp
+demo/local-data/
+coverage/
+node_modules/
+.env
+.env.*
+!.env.example
+.codebuddy/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

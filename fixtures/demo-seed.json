@@ -1,0 +1,23 @@
+{
+  "account": { "userId": "9000012345", "name": "演示用户" },
+  "group": { "groupId": "group_se_2024_1", "name": "软件工程2024级1班" },
+  "attachments": [
+    {
+      "schemaVersion": "0.2-rc1", "taskAttachmentId": "task_se_week03_demo", "taskName": "软件工程第3周作业", "groupId": "group_se_2024_1",
+      "publishAt": "2026-07-21T10:00:00+08:00", "deadlineAt": "2026-07-25T18:00:00+08:00", "sourceFilePath": "/demo/source/软件工程第3周作业.pdf",
+      "members": [
+        { "userId": "1000012345", "name": "合成成员甲", "studentId": "20240001", "submissionStatus": "unsubmitted", "lastSubmittedAt": null, "filePath": null, "reminderStatus": "pending", "remindedAt": null },
+        { "userId": "1000012346", "name": "合成成员乙", "studentId": "20240002", "submissionStatus": "unsubmitted", "lastSubmittedAt": null, "filePath": null, "reminderStatus": "pending", "remindedAt": null },
+        { "userId": "1000012347", "name": "合成成员丙", "studentId": "20240003", "submissionStatus": "unsubmitted", "lastSubmittedAt": null, "filePath": null, "reminderStatus": "pending", "remindedAt": null },
+        { "userId": "1000012348", "name": "合成成员丁", "studentId": "20240004", "submissionStatus": "unsubmitted", "lastSubmittedAt": null, "filePath": null, "reminderStatus": "pending", "remindedAt": null },
+        { "userId": "1000012349", "name": "合成成员戊", "studentId": "20240005", "submissionStatus": "unsubmitted", "lastSubmittedAt": null, "filePath": null, "reminderStatus": "pending", "remindedAt": null }
+      ], "createdAt": "2026-07-21T09:00:00+08:00", "updatedAt": "2026-07-21T09:00:00+08:00"
+    }
+  ],
+  "flows": [
+    { "schemaVersion": "0.2-rc1", "flowId": "flow_publish_demo", "name": "发布本周作业到软件工程班群", "templateId": "homework_publish_v1", "status": "enabled", "hook": { "type": "self_message", "params": { "conversationId": "assistant_main", "keyword": "发布本周作业" } }, "actions": [{ "actionId": "action_init_task", "type": "initialize_task_attachment", "params": { "taskAttachmentId": "task_se_week03_demo" } }, { "actionId": "action_send_homework", "type": "send_group_message_and_file", "params": { "groupId": "group_se_2024_1", "text": "请大家在7月25日18点前提交本周作业。", "filePath": "/demo/source/软件工程第3周作业.pdf" } }], "taskAttachmentId": "task_se_week03_demo", "createdAt": "2026-07-21T09:00:00+08:00", "updatedAt": "2026-07-21T09:00:00+08:00", "deletedAt": null },
+    { "schemaVersion": "0.2-rc1", "flowId": "flow_collect_demo", "name": "收到作业文件后匹配、改名、登记并回复", "templateId": "homework_collect_v1", "status": "enabled", "hook": { "type": "group_file_received", "params": { "groupId": "group_se_2024_1", "keyword": "作业", "allowedExtensions": [".docx", ".pdf"] } }, "actions": [{ "actionId": "action_match_person", "type": "match_person", "params": { "taskAttachmentId": "task_se_week03_demo" } }, { "actionId": "action_rename_file", "type": "rename_received_file", "params": { "nameTemplate": "{studentId}_{name}{originalExtension}" } }, { "actionId": "action_mark_submitted", "type": "mark_submission", "params": { "taskAttachmentId": "task_se_week03_demo" } }, { "actionId": "action_reply_received", "type": "reply_to_sender", "params": { "text": "收到，已帮你登记" } }], "taskAttachmentId": "task_se_week03_demo", "createdAt": "2026-07-21T09:00:00+08:00", "updatedAt": "2026-07-21T09:00:00+08:00", "deletedAt": null },
+    { "schemaVersion": "0.2-rc1", "flowId": "flow_remind_demo", "name": "周五18点提醒未交作业的同学", "templateId": "homework_remind_v1", "status": "enabled", "hook": { "type": "scheduled", "params": { "runAt": "2026-07-25T18:00:00+08:00", "timezone": "Asia/Shanghai" } }, "actions": [{ "actionId": "action_read_unsubmitted", "type": "read_unsubmitted", "params": { "taskAttachmentId": "task_se_week03_demo" } }, { "actionId": "action_build_recipients", "type": "build_recipient_list", "params": {} }, { "actionId": "action_send_reminder", "type": "send_direct_message_batch", "params": { "text": "本周作业即将截止，请尽快提交。" } }], "taskAttachmentId": "task_se_week03_demo", "createdAt": "2026-07-21T09:00:00+08:00", "updatedAt": "2026-07-21T09:00:00+08:00", "deletedAt": null }
+  ],
+  "adapterState": { "files": [{ "fileId": "file_homework_source", "name": "软件工程第3周作业.pdf", "path": "/demo/source/软件工程第3周作业.pdf" }] }
+}

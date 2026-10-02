@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "0.2-rc1",
+  "flowId": "flow_homework_collect_01",
+  "name": "收到作业文件后匹配、改名、登记并回复",
+  "templateId": "homework_collect_v1",
+  "status": "enabled",
+  "hook": {
+    "type": "group_file_received",
+    "params": {
+      "groupId": "group_se_2026",
+      "keyword": "作业",
+      "allowedExtensions": [".docx", ".pdf"]
+    }
+  },
+  "actions": [
+    {
+      "actionId": "action_match_person",
+      "type": "match_person",
+      "params": { "taskAttachmentId": "task_se_week03" }
+    },
+    {
+      "actionId": "action_rename_file",
+      "type": "rename_received_file",
+      "params": { "nameTemplate": "{studentId}_{name}{originalExtension}" }
+    },
+    {
+      "actionId": "action_mark_submitted",
+      "type": "mark_submission",
+      "params": { "taskAttachmentId": "task_se_week03" }
+    },
+    {
+      "actionId": "action_reply_received",
+      "type": "reply_to_sender",
+      "params": { "text": "收到，已帮你登记。" }
+    }
+  ],
+  "taskAttachmentId": "task_se_week03",
+  "createdAt": "2026-07-21T09:15:00+08:00",
+  "updatedAt": "2026-07-21T09:20:00+08:00",
+  "deletedAt": null
+}

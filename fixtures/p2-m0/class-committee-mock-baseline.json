@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "p2-m0-v1",
+  "scenarioId": "class-committee-private-submit-complete-loop",
+  "description": "目标态完整Mock闭环。包含当前未实现能力，currentSupport用于记录现状，不得作为已交付声明。",
+  "account": {"userId":"user_teacher_001","displayName":"演示用户"},
+  "group": {"groupId":"group_p2m0_class_01","name":"P2-M0合成班级群"},
+  "task": {
+    "taskId":"task_p2m0_homework_01",
+    "name":"P2-M0第1周作业",
+    "capabilities":["publish","collect","remind"],
+    "noticeText":"请在8月5日18点前提交作业。",
+    "noticeFilePath":"/mock/source/P2-M0第1周作业.pdf",
+    "allowedExtensions":[".docx",".pdf"],
+    "nameTemplate":"{studentId}_{name}{originalExtension}",
+    "receiptText":"收到，已帮你登记。",
+    "reminderText":"作业即将截止，请尽快提交。",
+    "runAt":"2026-08-05T18:00:00+08:00"
+  },
+  "roster": [
+    {"userId":"user_student_001","name":"合成成员甲","studentId":"M001"},
+    {"userId":"user_student_002","name":"合成成员乙","studentId":"M002"},
+    {"userId":"user_student_003","name":"合成成员丙","studentId":"M003"},
+    {"userId":"user_student_004","name":"合成成员丁","studentId":"M004"},
+    {"userId":"user_student_005","name":"合成成员戊","studentId":"M005"}
+  ],
+  "events": [
+    {"eventId":"p2m0_publish_01","channel":"group","type":"timer_fired","actorId":"system","occurredAt":"2026-08-02T09:00:00+08:00","expectedActions":["send_group_message_and_file"]},
+    {"eventId":"p2m0_private_file_01","channel":"direct","type":"direct_file_received","actorId":"user_student_001","occurredAt":"2026-08-03T12:00:00+08:00","file":{"fileId":"p2m0_file_01","name":"作业最终版.DOCX","path":"/mock/inbox/作业最终版.DOCX"},"expectedActions":["match_person","rename_received_file","mark_submission","reply_to_sender"]},
+    {"eventId":"p2m0_private_file_02","channel":"direct","type":"direct_file_received","actorId":"user_student_002","occurredAt":"2026-08-03T12:10:00+08:00","file":{"fileId":"p2m0_file_02","name":"作业.pdf","path":"/mock/inbox/作业.pdf"},"expectedActions":["match_person","rename_received_file","mark_submission","reply_to_sender"]},
+    {"eventId":"p2m0_remind_01","channel":"system","type":"timer_fired","actorId":"system","occurredAt":"2026-08-05T18:00:00+08:00","expectedActions":["read_unsubmitted","build_recipient_list","send_direct_message_batch","report_to_user"]},
+    {"eventId":"p2m0_duplicate_01","duplicateOf":"p2m0_private_file_01","channel":"direct","type":"direct_file_received","actorId":"user_student_001","occurredAt":"2026-08-03T12:00:00+08:00","file":{"fileId":"p2m0_file_01","name":"作业最终版.DOCX","path":"/mock/inbox/作业最终版.DOCX"},"expectedActions":[]}
+  ],
+  "expected": {
+    "groupNotifications":1,
+    "directFileReceipts":2,
+    "renamedFiles":["M001_合成成员甲.DOCX","M002_合成成员乙.pdf"],
+    "submittedUserIds":["user_student_001","user_student_002"],
+    "pendingUserIds":["user_student_003","user_student_004","user_student_005"],
+    "receiptMessages":2,
+    "reminderRecipients":3,
+    "userReport":{"submitted":2,"pending":3,"exceptions":0},
+    "allSubmittedVariant":{"status":"succeeded_no_action","reminderRecipients":0,"explanation":"全部已交，本次无需提醒。"},
+    "duplicateBusinessEffects":0
+  },
+  "currentSupport": {
+    "groupNotification":true,
+    "directFileReceived":false,
+    "identityMatch":true,
+    "renameAndStore":true,
+    "submissionRegistration":true,
+    "receiptVisible":true,
+    "reminderTextVisible":true,
+    "noActionExplanation":false,
+    "renamedFileInventory":false,
+    "userReport":false
+  }
+}

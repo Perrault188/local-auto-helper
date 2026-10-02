@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local-auto-helper.local/contracts/mock-event.schema.json",
+  "title": "本地Mock事件（草案）",
+  "description": "支持历史0.2-rc1/0.3-rc1与canonical 0.4-rc1。group_file_received仅供旧版本边界读取，0.4文件事件统一为file_received；direct_file_received不是受支持的第三种内部语义。",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "eventId", "type", "occurredAt", "payload"],
+      "properties": {
+        "schemaVersion": { "enum": ["0.2-rc1", "0.3-rc1", "0.4-rc1"] },
+        "eventId": { "$ref": "#/$defs/eventId" },
+        "type": { "const": "self_message_sent" },
+        "occurredAt": { "$ref": "#/$defs/time" },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["messageId", "conversationId", "senderUserId", "text"],
+          "properties": {
+            "messageId": { "type": "string", "minLength": 1 },
+            "conversationId": { "type": "string", "minLength": 1 },
+            "senderUserId": { "$ref": "#/$defs/userId" },
+            "text": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "eventId", "type", "occurredAt", "payload"],
+      "properties": {
+        "schemaVersion": { "enum": ["0.2-rc1", "0.3-rc1", "0.4-rc1"] },
+        "eventId": { "$ref": "#/$defs/eventId" },
+        "type": { "const": "timer_fired" },
+        "occurredAt": { "$ref": "#/$defs/time" },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scheduledFor", "timezone"],
+          "properties": {
+            "scheduledFor": { "$ref": "#/$defs/time" },
+            "timezone": { "const": "Asia/Shanghai" }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "eventId", "type", "occurredAt", "payload"],
+      "properties": {
+        "schemaVersion": { "enum": ["0.2-rc1", "0.3-rc1"] },
+        "eventId": { "$ref": "#/$defs/eventId" },
+        "type": { "const": "group_file_received" },
+        "occurredAt": { "$ref": "#/$defs/time" },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["messageId", "groupId", "senderUserId", "text", "file"],
+          "properties": {
+            "messageId": { "type": "string", "minLength": 1 },
+            "groupId": { "type": "string", "minLength": 1 },
+            "senderUserId": { "$ref": "#/$defs/userId" },
+            "text": { "type": "string" },
+            "file": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["fileId", "name", "path"],
+              "properties": {
+                "fileId": { "type": "string", "minLength": 1 },
+                "name": { "type": "string", "minLength": 1 },
+                "path": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "eventId", "type", "occurredAt", "payload"],
+      "properties": {
+        "schemaVersion": { "const": "0.4-rc1" },
+        "eventId": { "$ref": "#/$defs/eventId" },
+        "type": { "const": "file_received" },
+        "occurredAt": { "$ref": "#/$defs/time" },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["messageId", "conversationId", "conversationType", "senderUserId", "text", "file"],
+          "properties": {
+            "messageId": { "type": "string", "minLength": 1 },
+            "conversationId": { "type": "string", "pattern": "^conv_[A-Za-z0-9_-]+$" },
+            "conversationType": { "enum": ["group", "direct"] },
+            "senderUserId": { "$ref": "#/$defs/userId" },
+            "text": { "type": "string" },
+            "file": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["fileId", "name", "sourceRef"],
+              "properties": {
+                "fileId": { "type": "string", "minLength": 1 },
+                "name": { "type": "string", "minLength": 1 },
+                "sourceRef": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "eventId": { "type": "string", "pattern": "^event_[A-Za-z0-9_-]+$" },
+    "time": { "type": "string", "format": "date-time", "pattern": "(?:Z|[+-][0-9]{2}:[0-9]{2})$" },
+    "userId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{3,64}$" }
+  }
+}

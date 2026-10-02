@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local-auto-helper.local/contracts/run-record.schema.json",
+  "title": "自动帮办单次运行记录（草案）",
+  "description": "版本0.2-rc1 / 0.3-rc1。Action按数组顺序执行，保存Flow和事件快照；失败后尚未执行的步骤记为skipped。快照按创建时的版本保存，历史快照不被升级污染。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "flowId", "eventId", "status", "startedAt", "finishedAt", "viewedAt", "error", "flowSnapshot", "eventSnapshot", "steps"],
+  "properties": {
+    "schemaVersion": { "enum": ["0.2-rc1", "0.3-rc1", "0.4-rc1"] },
+    "runId": { "type": "string", "pattern": "^run_[A-Za-z0-9_-]+$" },
+    "flowId": { "type": "string", "pattern": "^flow_[A-Za-z0-9_-]+$" },
+    "eventId": { "type": "string", "pattern": "^event_[A-Za-z0-9_-]+$" },
+    "status": { "enum": ["running", "succeeded", "succeeded_no_action", "failed"] },
+    "startedAt": { "$ref": "#/$defs/time" },
+    "finishedAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] },
+    "viewedAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] },
+    "error": { "oneOf": [{ "$ref": "#/$defs/error" }, { "type": "null" }] },
+    "flowSnapshot": { "$ref": "flow.schema.json" },
+    "eventSnapshot": { "$ref": "mock-event.schema.json" },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/step" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "running" } }, "required": ["status"] },
+      "then": {
+        "properties": { "finishedAt": { "type": "null" }, "error": { "type": "null" } }
+      },
+      "else": { "properties": { "finishedAt": { "$ref": "#/$defs/time" } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] },
+      "then": { "properties": { "error": { "$ref": "#/$defs/error" } } },
+      "else": { "properties": { "error": { "type": "null" } } }
+    },
+    {
+      "if": { "properties": { "status": { "const": "succeeded_no_action" } }, "required": ["status"] },
+      "then": {
+        "properties": {
+          "steps": { "contains": { "properties": { "status": { "const": "skipped" } }, "required": ["status"] } }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionId", "actionType", "status", "startedAt", "finishedAt", "input", "output", "error"],
+      "properties": {
+        "actionId": { "type": "string", "pattern": "^action_[A-Za-z0-9_-]+$" },
+        "actionType": {
+          "enum": ["send_group_message_and_file", "initialize_task_attachment", "match_person", "reply_to_sender", "rename_received_file", "mark_submission", "read_unsubmitted", "build_recipient_list", "send_direct_message_batch"]
+        },
+        "status": { "enum": ["running", "succeeded", "failed", "skipped"] },
+        "startedAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] },
+        "finishedAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] },
+        "input": { "type": "object" },
+        "output": { "type": ["object", "null"] },
+        "error": { "oneOf": [{ "$ref": "#/$defs/error" }, { "type": "null" }] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "skipped" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "startedAt": { "type": "null" },
+              "finishedAt": { "type": "null" },
+              "output": { "type": "null" },
+              "error": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["succeeded", "failed"] } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "startedAt": { "$ref": "#/$defs/time" },
+              "finishedAt": { "$ref": "#/$defs/time" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "failed" } }, "required": ["status"] },
+          "then": { "properties": { "error": { "$ref": "#/$defs/error" } } },
+          "else": { "properties": { "error": { "type": "null" } } }
+        }
+      ]
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "recoverable"],
+      "properties": {
+        "code": {
+          "enum": ["PERSON_NOT_FOUND", "ATTACHMENT_NOT_FOUND", "FILE_NOT_FOUND", "HOOK_INPUT_INVALID", "ACTION_INPUT_INVALID", "ADAPTER_ERROR", "DELIVERY_OUTCOME_UNKNOWN"]
+        },
+        "message": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "recoverable": { "type": "boolean" },
+        "recoveryHint": { "type": "string", "minLength": 1, "maxLength": 300 }
+      }
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    }
+  }
+}

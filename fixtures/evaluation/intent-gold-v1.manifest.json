@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "intent-gold-v2",
+  "createdFor": "P2-M0",
+  "datasetType": "regression",
+  "holdoutType": "regression",
+  "caseCount": 240
+}

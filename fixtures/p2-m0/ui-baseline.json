@@ -1,0 +1,13 @@
+{
+  "schemaVersion":"p2-m0-v1",
+  "checks":[
+    {"checkId":"ui-latest-message","label":"聊天定位最新消息","probe":"source","requiredPatterns":["chatFlow","scrollHeight"]},
+    {"checkId":"ui-numbered-options","label":"编号选项","probe":"source","requiredPatterns":["step-opt-num"]},
+    {"checkId":"ui-self-input","label":"选项与自填路径","probe":"source","requiredPatterns":["datetime-local","agentSendText"]},
+    {"checkId":"ui-confirm-card","label":"确认卡完整显示","probe":"source","requiredPatterns":["触发","读取","更新","通知","人工关口","暂停或修改","确认并启用","暂不启用","修改","返回上一步","取消这条帮办"]},
+    {"checkId":"ui-reminder-copy","label":"催交文案可见","probe":"source","requiredPatterns":["提醒缺失对象"]},
+    {"checkId":"ui-no-action-copy","label":"空未交名单解释","probe":"source","requiredPatterns":["全部已交，本次无需提醒"]},
+    {"checkId":"ui-renamed-files","label":"改名文件清单","probe":"source","requiredPatterns":["改名文件清单"]},
+    {"checkId":"ui-user-report","label":"给用户汇报","probe":"source","requiredPatterns":["已收","未收","异常"]}
+  ]
+}

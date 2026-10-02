@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "0.2-rc1",
+  "flowId": "flow_invalid_multi_hook",
+  "name": "非法的多Hook帮办",
+  "templateId": "homework_publish_v1",
+  "status": "enabled",
+  "hook": [
+    { "type": "self_message", "params": { "conversationId": "assistant_main", "keyword": "发布" } },
+    { "type": "scheduled", "params": { "runAt": "2026-07-25T18:00:00+08:00", "timezone": "Asia/Shanghai" } }
+  ],
+  "actions": [],
+  "taskAttachmentId": "task_se_week03",
+  "createdAt": "2026-07-21T09:00:00+08:00",
+  "updatedAt": "2026-07-21T09:00:00+08:00",
+  "deletedAt": null
+}

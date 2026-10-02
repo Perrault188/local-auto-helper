@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local-auto-helper.local/contracts/flow.schema.json",
+  "title": "本地助手自动帮办单线Flow定义（草案）",
+  "description": "支持历史0.2-rc1/0.3-rc1与canonical 0.4-rc1。每条Flow只允许一个Hook和严格线性的Action数组；group_file_received仅供0.2/0.3 legacy读取，file_received仅供0.4 canonical写入；direct_file_received不是受支持的第三种内部语义。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "flowId", "name", "templateId", "status", "hook", "actions", "taskAttachmentId", "createdAt", "updatedAt", "deletedAt"],
+  "properties": {
+    "schemaVersion": { "enum": ["0.2-rc1", "0.3-rc1", "0.4-rc1"] },
+    "flowId": { "type": "string", "pattern": "^flow_[A-Za-z0-9_-]+$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "templateId": {
+      "enum": ["homework_publish_v1", "homework_collect_v1", "homework_remind_v1"]
+    },
+    "status": { "enum": ["draft", "enabled", "disabled", "deleted"] },
+    "hook": { "$ref": "#/$defs/hook" },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "taskAttachmentId": { "type": "string", "pattern": "^task_[A-Za-z0-9_-]+$" },
+    "createdAt": { "$ref": "#/$defs/time" },
+    "updatedAt": { "$ref": "#/$defs/time" },
+    "deletedAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "deleted" } }, "required": ["status"] },
+      "then": { "properties": { "deletedAt": { "$ref": "#/$defs/time" } } },
+      "else": { "properties": { "deletedAt": { "type": "null" } } }
+    },
+    {
+      "$comment": "0.4-rc1 only writes canonical file_received hooks; group_file_received remains legacy-read only.",
+      "not": {
+        "type": "object",
+        "required": ["schemaVersion", "hook"],
+        "properties": {
+          "schemaVersion": { "const": "0.4-rc1" },
+          "hook": {
+            "type": "object",
+            "required": ["type"],
+            "properties": { "type": { "const": "group_file_received" } }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "Canonical file_received hooks are valid only in 0.4-rc1 flows.",
+      "if": {
+        "type": "object",
+        "required": ["hook"],
+        "properties": {
+          "hook": {
+            "type": "object",
+            "required": ["type"],
+            "properties": { "type": { "const": "file_received" } }
+          }
+        }
+      },
+      "then": {
+        "properties": { "schemaVersion": { "const": "0.4-rc1" } }
+      }
+    }
+  ],
+  "$defs": {
+    "hook": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "params"],
+          "properties": {
+            "type": { "const": "self_message" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["conversationId", "keyword"],
+              "properties": {
+                "conversationId": { "type": "string", "minLength": 1 },
+                "keyword": { "type": "string", "minLength": 1, "maxLength": 100 }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "params"],
+          "properties": {
+            "type": { "const": "scheduled" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["runAt", "timezone"],
+              "properties": {
+                "runAt": { "type": "string", "format": "date-time" },
+                "timezone": { "const": "Asia/Shanghai" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "params"],
+          "properties": {
+            "type": { "const": "group_file_received" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["groupId", "allowedExtensions"],
+              "properties": {
+                "groupId": { "type": "string", "minLength": 1 },
+                "keyword": { "type": "string", "pattern": ".*\\S.*", "maxLength": 100 },
+                "allowedExtensions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "type": "string", "pattern": "^\\.[A-Za-z0-9]+$" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "params"],
+          "properties": {
+            "type": { "const": "file_received" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["conversationType", "conversationId", "allowedExtensions"],
+              "properties": {
+                "conversationType": { "enum": ["group", "direct"] },
+                "conversationId": { "type": "string", "pattern": "^conv_[A-Za-z0-9_-]+$" },
+                "groupId": { "type": "string", "minLength": 1 },
+                "keyword": { "type": "string", "pattern": ".*\\S.*", "maxLength": 100 },
+                "allowedExtensions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "type": "string", "pattern": "^\\.[A-Za-z0-9]+$" }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "action": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actionId", "type", "params"],
+          "properties": {
+            "actionId": { "$ref": "#/$defs/actionId" },
+            "type": { "const": "match_person" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["taskAttachmentId"],
+              "properties": { "taskAttachmentId": { "$ref": "#/$defs/taskId" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actionId", "type", "params"],
+          "properties": {
+            "actionId": { "$ref": "#/$defs/actionId" },
+            "type": { "const": "send_group_message_and_file" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["groupId", "text", "filePath"],
+              "properties": {
+                "groupId": { "type": "string", "minLength": 1 },
+                "text": { "$ref": "#/$defs/text" },
+                "filePath": { "$ref": "#/$defs/path" }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actionId", "type", "params"],
+          "properties": {
+            "actionId": { "$ref": "#/$defs/actionId" },
+            "type": { "const": "initialize_task_attachment" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["taskAttachmentId"],
+              "properties": { "taskAttachmentId": { "$ref": "#/$defs/taskId" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actionId", "type", "params"],
+          "properties": {
+            "actionId": { "$ref": "#/$defs/actionId" },
+            "type": { "const": "reply_to_sender" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["text"],
+              "properties": { "text": { "$ref": "#/$defs/text" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actionId", "type", "params"],
+          "properties": {
+            "actionId": { "$ref": "#/$defs/actionId" },
+            "type": { "const": "rename_received_file" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["nameTemplate"],
+              "properties": {
+                "nameTemplate": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "仅允许使用{studentId}、{name}、{originalExtension}占位符。"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actionId", "type", "params"],
+          "properties": {
+            "actionId": { "$ref": "#/$defs/actionId" },
+            "type": { "const": "mark_submission" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["taskAttachmentId"],
+              "properties": { "taskAttachmentId": { "$ref": "#/$defs/taskId" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actionId", "type", "params"],
+          "properties": {
+            "actionId": { "$ref": "#/$defs/actionId" },
+            "type": { "const": "read_unsubmitted" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["taskAttachmentId"],
+              "properties": { "taskAttachmentId": { "$ref": "#/$defs/taskId" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actionId", "type", "params"],
+          "properties": {
+            "actionId": { "$ref": "#/$defs/actionId" },
+            "type": { "const": "build_recipient_list" },
+            "params": { "type": "object", "additionalProperties": false }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["actionId", "type", "params"],
+          "properties": {
+            "actionId": { "$ref": "#/$defs/actionId" },
+            "type": { "const": "send_direct_message_batch" },
+            "params": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["text"],
+              "properties": { "text": { "$ref": "#/$defs/text" } }
+            }
+          }
+        }
+      ]
+    },
+    "actionId": { "type": "string", "pattern": "^action_[A-Za-z0-9_-]+$" },
+    "taskId": { "type": "string", "pattern": "^task_[A-Za-z0-9_-]+$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "path": { "type": "string", "minLength": 1 }
+    ,
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    }
+  }
+}

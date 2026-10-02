@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "mvp-case-coverage-v1",
+  "classCommittee": {
+    "caseId": "class_committee_collect_and_remind",
+    "message": "帮我收作业并提醒未交同学",
+    "selectedCapabilities": ["collect", "remind"],
+    "trustedContext": {
+      "domain": "education",
+      "taskName": "合成班委作业收取",
+      "groupId": "group_mock_class_01",
+      "collectRule": {
+        "allowedExtensions": [".pdf"],
+        "keyword": "作业"
+      },
+      "roster": [
+        {
+          "userId": "8200010001",
+          "name": "合成成员甲",
+          "studentId": "MOCK001"
+        },
+        {
+          "userId": "8200010002",
+          "name": "合成成员乙",
+          "studentId": "MOCK002"
+        }
+      ],
+      "nameTemplate": "{studentId}_{name}{originalExtension}",
+      "replyText": "收到，已登记这份合成作业",
+      "remindText": "这是合成提醒，请提交作业",
+      "remindAt": "2026-08-01T18:00:00+08:00",
+      "deadlineAt": "2026-08-01T18:00:00+08:00"
+    },
+    "submitEvent": {
+      "schemaVersion": "0.2-rc1",
+      "eventId": "event_mock_class_submit_001",
+      "type": "group_file_received",
+      "occurredAt": "2026-08-01T17:00:00+08:00",
+      "payload": {
+        "messageId": "message_mock_class_submit_001",
+        "groupId": "group_mock_class_01",
+        "senderUserId": "8200010001",
+        "text": "提交合成作业",
+        "file": {
+          "fileId": "file_mock_class_submit_001",
+          "name": "作业.pdf",
+          "path": "/demo/inbox/mock-class-assignment.pdf"
+        }
+      }
+    },
+    "remindEvent": {
+      "schemaVersion": "0.2-rc1",
+      "eventId": "event_mock_class_remind_001",
+      "type": "timer_fired",
+      "occurredAt": "2026-08-01T18:00:00+08:00",
+      "payload": {
+        "scheduledFor": "2026-08-01T18:00:00+08:00",
+        "timezone": "Asia/Shanghai"
+      }
+    }
+  },
+  "lotteryBoundary": {
+    "caseId": "lottery_group_order_boundary",
+    "messages": [
+      "帮我记下群里这组合成号码和倍数，确认后接单",
+      "群里有人发了合成号码让我出票，先帮我登记",
+      "把客户发来的合成号码、倍数和金额整理成待确认订单"
+    ],
+    "unsupportedCreationInput": {
+      "domain": "lottery",
+      "capabilities": ["collect"],
+      "taskName": "合成彩票接单",
+      "groupId": "group_mock_lottery_01"
+    },
+    "unsupportedEvent": {
+      "schemaVersion": "0.2-rc1",
+      "eventId": "event_mock_lottery_message_001",
+      "type": "group_message_received",
+      "occurredAt": "2026-08-01T11:00:00+08:00",
+      "payload": {
+        "messageId": "message_mock_lottery_001",
+        "groupId": "group_mock_lottery_01",
+        "senderUserId": "mock_lottery_customer_001",
+        "text": "合成号码A组，合成倍数2，合成金额20"
+      }
+    }
+  }
+}

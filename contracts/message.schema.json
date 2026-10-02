@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local-auto-helper.local/contracts/message.schema.json",
+  "title": "本地助手业务消息事实",
+  "description": "MessageLog 唯一事实模型。入站消息不绑定运行效果；出站消息显式区分 wildcard 父 effectKey 与 recipient 子 actionKey。",
+  "$comment": "Outbound effectKey and actionKey MUST differ. Draft 2020-12 cannot express cross-field inequality without non-standard $data; runtime validateMessage enforces it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "messageSchemaVersion",
+    "messageId",
+    "externalMessageId",
+    "connector",
+    "conversationId",
+    "direction",
+    "kind",
+    "effectType",
+    "senderRef",
+    "recipientKey",
+    "text",
+    "file",
+    "occurredAt",
+    "recordedAt",
+    "eventId",
+    "automationId",
+    "flowId",
+    "runId",
+    "actionId",
+    "actionKey",
+    "effectKey",
+    "deliveryStatus",
+    "payloadHash",
+    "immutableFingerprint"
+  ],
+  "properties": {
+    "messageSchemaVersion": { "const": "1.0" },
+    "messageId": { "type": "string", "pattern": "^msg_[A-Za-z0-9_-]+$" },
+    "externalMessageId": { "type": "string", "minLength": 1 },
+    "connector": { "const": "mock" },
+    "conversationId": { "type": "string", "pattern": "^conv_[A-Za-z0-9_-]+$" },
+    "direction": { "enum": ["inbound", "outbound"] },
+    "kind": { "enum": ["text", "file", "text_file"] },
+    "effectType": { "enum": ["inbound", "group_send", "reply", "direct_send"] },
+    "senderRef": { "type": "string", "minLength": 1 },
+    "recipientKey": { "type": ["string", "null"] },
+    "text": { "type": ["string", "null"] },
+    "file": {
+      "oneOf": [
+        { "$ref": "#/$defs/file" },
+        { "type": "null" }
+      ]
+    },
+    "occurredAt": { "$ref": "#/$defs/time" },
+    "recordedAt": { "$ref": "#/$defs/time" },
+    "eventId": { "type": "string", "pattern": "^event_[A-Za-z0-9_-]+$" },
+    "automationId": { "oneOf": [{ "$ref": "#/$defs/automationId" }, { "type": "null" }] },
+    "flowId": { "oneOf": [{ "$ref": "#/$defs/flowId" }, { "type": "null" }] },
+    "runId": { "oneOf": [{ "$ref": "#/$defs/runId" }, { "type": "null" }] },
+    "actionId": { "oneOf": [{ "$ref": "#/$defs/actionId" }, { "type": "null" }] },
+    "actionKey": { "oneOf": [{ "$ref": "#/$defs/actionKey" }, { "type": "null" }] },
+    "effectKey": { "oneOf": [{ "$ref": "#/$defs/actionKey" }, { "type": "null" }] },
+    "deliveryStatus": { "enum": ["received", "pending", "mock_recorded", "failed"] },
+    "payloadHash": { "$ref": "#/$defs/hash" },
+    "immutableFingerprint": { "$ref": "#/$defs/hash" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "direction": { "const": "inbound" } },
+        "required": ["direction"]
+      },
+      "then": {
+        "properties": {
+          "effectType": { "const": "inbound" },
+          "recipientKey": { "type": "null" },
+          "automationId": { "type": "null" },
+          "flowId": { "type": "null" },
+          "runId": { "type": "null" },
+          "actionId": { "type": "null" },
+          "actionKey": { "type": "null" },
+          "effectKey": { "type": "null" },
+          "deliveryStatus": { "const": "received" }
+        }
+      },
+      "else": {
+        "properties": {
+          "effectType": { "enum": ["group_send", "reply", "direct_send"] },
+          "senderRef": { "const": "local-auto-helper" },
+          "recipientKey": { "type": "string", "minLength": 1 },
+          "flowId": { "$ref": "#/$defs/flowId" },
+          "runId": { "$ref": "#/$defs/runId" },
+          "actionId": { "$ref": "#/$defs/actionId" },
+          "actionKey": { "$ref": "#/$defs/actionKey" },
+          "effectKey": { "$ref": "#/$defs/actionKey" },
+          "deliveryStatus": { "enum": ["pending", "mock_recorded", "failed"] }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "kind": { "const": "text" } },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "text": { "type": "string" },
+          "file": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "kind": { "const": "file" } },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "text": { "type": "null" },
+          "file": { "$ref": "#/$defs/file" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "kind": { "const": "text_file" } },
+        "required": ["kind"]
+      },
+      "then": {
+        "properties": {
+          "text": { "type": "string" },
+          "file": { "$ref": "#/$defs/file" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "deliveryStatus": { "not": { "const": "failed" } },
+          "file": { "type": "object" }
+        },
+        "required": ["deliveryStatus", "file"]
+      },
+      "then": {
+        "properties": {
+          "file": {
+            "type": "object",
+            "properties": {
+              "fileId": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fileId", "name", "sourceRef"],
+      "properties": {
+        "fileId": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "sourceRef": { "type": "string", "minLength": 1 }
+      }
+    },
+    "automationId": { "type": "string", "pattern": "^automation_[A-Za-z0-9_-]+$" },
+    "flowId": { "type": "string", "pattern": "^flow_[A-Za-z0-9_-]+$" },
+    "runId": { "type": "string", "pattern": "^run_[A-Za-z0-9_-]+$" },
+    "actionId": { "type": "string", "pattern": "^action_[A-Za-z0-9_-]+$" },
+    "actionKey": { "type": "string", "pattern": "^action_[A-Za-z0-9_-]+$" },
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    }
+  }
+}

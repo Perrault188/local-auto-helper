@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "0.2-rc1",
+  "flowId": "flow_homework_remind_01",
+  "name": "周五18点提醒未交作业的同学",
+  "templateId": "homework_remind_v1",
+  "status": "enabled",
+  "hook": {
+    "type": "scheduled",
+    "params": {
+      "runAt": "2026-07-25T18:00:00+08:00",
+      "timezone": "Asia/Shanghai"
+    }
+  },
+  "actions": [
+    {
+      "actionId": "action_read_unsubmitted",
+      "type": "read_unsubmitted",
+      "params": { "taskAttachmentId": "task_se_week03" }
+    },
+    {
+      "actionId": "action_build_recipients",
+      "type": "build_recipient_list",
+      "params": {}
+    },
+    {
+      "actionId": "action_send_reminder",
+      "type": "send_direct_message_batch",
+      "params": { "text": "本周作业即将截止，请尽快提交。" }
+    }
+  ],
+  "taskAttachmentId": "task_se_week03",
+  "createdAt": "2026-07-21T09:25:00+08:00",
+  "updatedAt": "2026-07-21T09:30:00+08:00",
+  "deletedAt": null
+}

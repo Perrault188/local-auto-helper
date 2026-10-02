@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>本地助手自动帮办Demo</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <!-- 图标合集：inline SVG symbol，使用处 <use> 引用；stroke=currentColor 跟随文字色 -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-contacts" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.2 8.4l-.1-.1A2 2 0 1 1 6.9 5.5l.1.1A1.6 1.6 0 0 0 9 5.7V5a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-emoji" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14a4 4 0 0 0 8 0"/><path d="M9 9h.01M15 9h.01"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></symbol>
+    <symbol id="i-min" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-square" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  </svg>
+
+  <div class="desktop">
+    <aside class="app-rail" aria-label="应用导航">
+      <div class="app-mark" aria-hidden="true">助</div>
+      <button class="rail-icon active" aria-label="消息" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#i-message"/></svg></button>
+      <button class="rail-icon" aria-label="联系人"><svg class="icon" aria-hidden="true"><use href="#i-contacts"/></svg></button>
+      <span class="rail-spacer"></span>
+      <button class="rail-icon" aria-label="设置"><svg class="icon" aria-hidden="true"><use href="#i-settings"/></svg></button>
+      <div class="avatar" aria-label="当前演示用户">演</div>
+    </aside>
+    <section class="shell">
+      <header class="titlebar"><div><strong>本地助手</strong><span>该对话仅自己可见</span></div>
+        <div class="window-actions">
+          <button aria-label="最小化"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-min"/></svg></button>
+          <button aria-label="最大化"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-square"/></svg></button>
+          <button aria-label="关闭"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-close"/></svg></button>
+        </div>
+      </header>
+      <div class="workspace">
+        <nav class="side" aria-label="主导航">
+          <div class="search"><svg class="icon icon-sm" aria-hidden="true"><use href="#i-search"/></svg><span>搜索</span></div>
+          <button class="nav-item active" data-route="home"><i><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg></i><span>和本地助手聊聊</span></button>
+          <button class="nav-item" data-route="automations"><i><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg></i><span>自动帮办</span><b id="failureBadge" hidden></b></button>
+          <div class="nav-label">最近</div>
+          <button class="conversation" data-route="conversations"><span class="mini-avatar">聊</span><span><b>群聊与私聊</b><small>查看真实Mock消息记录</small></span></button>
+          <div class="side-footer"><span class="status-dot"></span>本地Mock通道</div>
+        </nav>
+        <main id="app" tabindex="-1"></main>
+      </div>
+    </section>
+  </div>
+  <div id="modalRoot"></div><div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

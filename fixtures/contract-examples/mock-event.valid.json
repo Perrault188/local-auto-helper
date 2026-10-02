@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "0.2-rc1",
+  "eventId": "event_file_0001",
+  "type": "group_file_received",
+  "occurredAt": "2026-07-22T14:20:00+08:00",
+  "payload": {
+    "messageId": "message_0001",
+    "groupId": "group_se_2026",
+    "senderUserId": "1000012345",
+    "text": "作业提交",
+    "file": {
+      "fileId": "file_0001",
+      "name": "第三周作业.docx",
+      "path": "/demo/inbox/第三周作业.docx"
+    }
+  }
+}

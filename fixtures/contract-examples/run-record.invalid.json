@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "0.2-rc1",
+  "runId": "run_collect_0002",
+  "flowId": "flow_homework_collect_01",
+  "eventId": "event_file_0002",
+  "status": "failed",
+  "startedAt": "2026-07-22T14:20:00+08:00",
+  "finishedAt": "2026-07-22T14:20:01+08:00",
+  "viewedAt": null,
+  "error": {
+    "code": "UNKNOWN_ERROR",
+    "message": "未知错误",
+    "recoverable": false
+  },
+  "flowSnapshot": {},
+  "eventSnapshot": {},
+  "steps": []
+}

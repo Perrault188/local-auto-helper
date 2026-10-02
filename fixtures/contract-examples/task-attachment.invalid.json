@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "0.2-rc1",
+  "taskAttachmentId": "task_se_week03",
+  "taskName": "软件工程第3周作业",
+  "groupId": "group_se_2026",
+  "publishAt": "2026-07-21T10:00:00+08:00",
+  "deadlineAt": "2026-07-25T18:00:00+08:00",
+  "members": [
+    {
+      "userId": "invalid id",
+      "name": "合成成员甲",
+      "studentId": "20260001",
+      "submissionStatus": "unknown",
+      "lastSubmittedAt": null,
+      "filePath": null,
+      "reminderStatus": "pending",
+      "remindedAt": null
+    }
+  ],
+  "createdAt": "2026-07-21T09:00:00+08:00",
+  "updatedAt": "2026-07-21T09:00:00+08:00"
+}

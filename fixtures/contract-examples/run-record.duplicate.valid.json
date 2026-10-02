@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "0.2-rc1",
+  "runId": "run_collect_duplicate_0002",
+  "flowId": "flow_homework_collect_01",
+  "eventId": "event_file_0002",
+  "status": "succeeded_no_action",
+  "startedAt": "2026-07-22T15:00:00+08:00",
+  "finishedAt": "2026-07-22T15:00:00+08:00",
+  "viewedAt": null,
+  "error": null,
+  "flowSnapshot": {
+    "schemaVersion": "0.2-rc1",
+    "flowId": "flow_homework_collect_01",
+    "name": "收到作业文件后改名、登记并回复",
+    "templateId": "homework_collect_v1",
+    "status": "enabled",
+    "hook": { "type": "group_file_received", "params": { "groupId": "group_se_2026", "keyword": "作业", "allowedExtensions": [".docx", ".pdf"] } },
+    "actions": [
+      { "actionId": "action_match_person", "type": "match_person", "params": { "taskAttachmentId": "task_se_week03" } },
+      { "actionId": "action_rename_file", "type": "rename_received_file", "params": { "nameTemplate": "{studentId}_{name}{originalExtension}" } },
+      { "actionId": "action_mark_submitted", "type": "mark_submission", "params": { "taskAttachmentId": "task_se_week03" } },
+      { "actionId": "action_reply_received", "type": "reply_to_sender", "params": { "text": "收到，已帮你登记。" } }
+    ],
+    "taskAttachmentId": "task_se_week03",
+    "createdAt": "2026-07-21T09:15:00+08:00",
+    "updatedAt": "2026-07-21T09:20:00+08:00",
+    "deletedAt": null
+  },
+  "eventSnapshot": {
+    "schemaVersion": "0.2-rc1",
+    "eventId": "event_file_0002",
+    "type": "group_file_received",
+    "occurredAt": "2026-07-22T15:00:00+08:00",
+    "payload": {
+      "messageId": "message_0002",
+      "groupId": "group_se_2026",
+      "senderUserId": "1000012345",
+      "text": "作业提交",
+      "file": { "fileId": "file_0002", "name": "修改版.docx", "path": "/demo/inbox/修改版.docx" }
+    }
+  },
+  "steps": [
+    {
+      "actionId": "action_match_person",
+      "actionType": "match_person",
+      "status": "succeeded",
+      "startedAt": "2026-07-22T15:00:00+08:00",
+      "finishedAt": "2026-07-22T15:00:00+08:00",
+      "input": { "taskAttachmentId": "task_se_week03", "userId": "1000012345", "originalFile": { "fileId": "file_0002", "path": "/demo/inbox/修改版.docx" } },
+      "output": { "userId": "1000012345", "isDuplicate": true },
+      "error": null
+    },
+    { "actionId": "action_rename_file", "actionType": "rename_received_file", "status": "skipped", "startedAt": null, "finishedAt": null, "input": {}, "output": null, "error": null },
+    { "actionId": "action_mark_submitted", "actionType": "mark_submission", "status": "skipped", "startedAt": null, "finishedAt": null, "input": {}, "output": null, "error": null },
+    { "actionId": "action_reply_received", "actionType": "reply_to_sender", "status": "skipped", "startedAt": null, "finishedAt": null, "input": {}, "output": null, "error": null }
+  ]
+}

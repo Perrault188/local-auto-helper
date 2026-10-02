@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "0.2-rc1",
+  "flowId": "flow_homework_publish_deleted_01",
+  "name": "已删除的作业发布帮办",
+  "templateId": "homework_publish_v1",
+  "status": "deleted",
+  "hook": {
+    "type": "scheduled",
+    "params": {
+      "runAt": "2026-07-25T10:00:00+08:00",
+      "timezone": "Asia/Shanghai"
+    }
+  },
+  "actions": [
+    {
+      "actionId": "action_init_deleted_task",
+      "type": "initialize_task_attachment",
+      "params": { "taskAttachmentId": "task_deleted_demo" }
+    },
+    {
+      "actionId": "action_send_deleted_task",
+      "type": "send_group_message_and_file",
+      "params": {
+        "groupId": "group_se_2026",
+        "text": "已删除帮办的历史配置快照。",
+        "filePath": "/demo/source/history.pdf"
+      }
+    }
+  ],
+  "taskAttachmentId": "task_deleted_demo",
+  "createdAt": "2026-07-21T09:00:00+08:00",
+  "updatedAt": "2026-07-22T09:00:00+08:00",
+  "deletedAt": "2026-07-22T09:00:00+08:00"
+}

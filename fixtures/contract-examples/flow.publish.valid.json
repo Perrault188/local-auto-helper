@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "0.2-rc1",
+  "flowId": "flow_homework_publish_01",
+  "name": "发布本周作业到软件工程班群",
+  "templateId": "homework_publish_v1",
+  "status": "enabled",
+  "hook": {
+    "type": "self_message",
+    "params": {
+      "conversationId": "assistant_main",
+      "keyword": "发布本周作业"
+    }
+  },
+  "actions": [
+    {
+      "actionId": "action_init_task",
+      "type": "initialize_task_attachment",
+      "params": {
+        "taskAttachmentId": "task_se_week03"
+      }
+    },
+    {
+      "actionId": "action_send_homework",
+      "type": "send_group_message_and_file",
+      "params": {
+        "groupId": "group_se_2026",
+        "text": "请大家在7月25日18点前提交本周作业。",
+        "filePath": "/demo/source/软件工程第3周作业.pdf"
+      }
+    }
+  ],
+  "taskAttachmentId": "task_se_week03",
+  "createdAt": "2026-07-21T09:00:00+08:00",
+  "updatedAt": "2026-07-21T09:10:00+08:00",
+  "deletedAt": null
+}

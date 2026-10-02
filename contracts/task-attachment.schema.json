@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local-auto-helper.local/contracts/task-attachment.schema.json",
+  "title": "作业任务附件（草案）",
+  "description": "版本0.2-rc1 / 0.3-rc1。受控业务附件，不含Flow调度信息。用户ID为人员唯一标识，唯一性由应用层校验。0.3-rc1（A2 彻底档）新增可选 capabilities，按能力裁剪必填字段：只 publish/collect 需 groupId；publish 需 publishAt；仅催未交闭环(collect+remind)需 deadlineAt；仅 collect 需非空 members；纯 remind/publish 允许 groupId/deadlineAt 为 null、members 为空。缺省 capabilities 视为全能力，等价 0.2-rc1 全必填。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "taskAttachmentId", "taskName", "groupId", "publishAt", "deadlineAt", "members", "createdAt", "updatedAt"],
+  "properties": {
+    "schemaVersion": { "enum": ["0.2-rc1", "0.3-rc1"] },
+    "taskAttachmentId": { "type": "string", "pattern": "^task_[A-Za-z0-9_-]+$" },
+    "taskName": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "groupId": { "type": ["string", "null"], "minLength": 1 },
+    "publishAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] },
+    "deadlineAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] },
+    "sourceFilePath": { "type": ["string", "null"] },
+    "members": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/member" }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["publish", "collect", "remind"] },
+      "description": "0.3-rc1 可选。声明本任务启用的能力子集；省略即全能力（等价 0.2-rc1）。字段必填性据此按能力裁剪。"
+    },
+    "createdAt": { "$ref": "#/$defs/time" },
+    "updatedAt": { "$ref": "#/$defs/time" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "not": { "required": ["capabilities"] }
+      },
+      "then": {
+        "description": "缺省 capabilities（0.2-rc1 或未声明）：回到全必填——群/发布时间/截止时间非空，名单至少一人。",
+        "properties": {
+          "groupId": { "type": "string", "minLength": 1 },
+          "publishAt": { "$ref": "#/$defs/time" },
+          "deadlineAt": { "$ref": "#/$defs/time" },
+          "members": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/member" } }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["capabilities"],
+        "properties": { "capabilities": { "contains": { "const": "collect" } } }
+      },
+      "then": {
+        "description": "含 collect：需群与非空名单。",
+        "properties": {
+          "groupId": { "type": "string", "minLength": 1 },
+          "members": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/member" } }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId", "name", "studentId", "submissionStatus", "lastSubmittedAt", "filePath", "reminderStatus", "remindedAt"],
+      "properties": {
+        "userId": { "type": "string", "pattern": "^[A-Za-z0-9_-]{3,64}$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "submissionStatus": { "enum": ["unsubmitted", "submitted"] },
+        "lastSubmittedAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] },
+        "filePath": { "type": ["string", "null"] },
+        "reminderStatus": { "enum": ["not_needed", "pending", "sent"] },
+        "remindedAt": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "submissionStatus": { "const": "submitted" } }, "required": ["submissionStatus"] },
+          "then": {
+            "properties": {
+              "lastSubmittedAt": { "$ref": "#/$defs/time" },
+              "filePath": { "type": "string", "minLength": 1 },
+              "reminderStatus": { "const": "not_needed" }
+            }
+          },
+          "else": {
+            "properties": {
+              "lastSubmittedAt": { "type": "null" },
+              "filePath": { "type": "null" },
+              "reminderStatus": { "enum": ["pending", "sent"] }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "reminderStatus": { "const": "sent" } }, "required": ["reminderStatus"] },
+          "then": { "properties": { "remindedAt": { "$ref": "#/$defs/time" } } },
+          "else": { "properties": { "remindedAt": { "type": "null" } } }
+        }
+      ]
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "(?:Z|[+-][0-9]{2}:[0-9]{2})$"
+    }
+  }
+}
