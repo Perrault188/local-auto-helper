@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node demo/server.mjs",
-    "test": "node --test tests/*.test.mjs tests/evaluation/*.test.mjs",
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs tests/evaluation/*.test.mjs",
     "eval:m0:rule": "node tests/evaluation/evaluate-rule-intent.mjs",
     "eval:m0:safety": "node tests/evaluation/intent-safety-runner.mjs",
     "eval:m0:hygiene": "node tests/evaluation/intent-dataset-hygiene-probe.mjs",
