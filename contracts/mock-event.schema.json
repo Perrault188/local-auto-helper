@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://local-auto-helper.local/contracts/mock-event.schema.json",
-  "title": "本地Mock事件（草案）",
+  "title": "本地Mock事件",
   "description": "支持历史0.2-rc1/0.3-rc1与canonical 0.4-rc1。group_file_received仅供旧版本边界读取，0.4文件事件统一为file_received；direct_file_received不是受支持的第三种内部语义。",
   "oneOf": [
     {

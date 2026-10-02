@@ -76,7 +76,8 @@ async function evaluateClassCommittee() {
     && duplicateRuns[0]?.runId === submitRuns[0]?.runId
     && remindRuns[0]?.status === 'succeeded'
     && member?.submissionStatus === 'submitted'
-    && member?.filePath === '/demo/submissions/MOCK001_合成成员甲.pdf'
+    && member?.filePath?.startsWith('/demo/submissions/task_')
+    && member?.filePath?.endsWith('/MOCK001_合成成员甲.pdf')
     && pending?.reminderStatus === 'sent'
     && state.adapters.replies.length === 1
     && state.adapters.directMessages.length === 1;
@@ -90,7 +91,12 @@ async function evaluateClassCommittee() {
     runCount: state.runs.length,
     mockReplyCount: state.adapters.replies.length,
     mockDirectMessageCount: state.adapters.directMessages.length,
-    duplicateIdempotent: duplicateRuns[0]?.runId === submitRuns[0]?.runId
+    duplicateIdempotent: duplicateRuns[0]?.runId === submitRuns[0]?.runId,
+    submitRunStatus: submitRuns[0]?.status ?? null,
+    remindRunStatus: remindRuns[0]?.status ?? null,
+    submittedMemberStatus: member?.submissionStatus ?? null,
+    submittedMemberFilePath: member?.filePath ?? null,
+    pendingMemberReminderStatus: pending?.reminderStatus ?? null
   };
   service.db.close();
   return result;

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://local-auto-helper.local/contracts/flow.schema.json",
-  "title": "本地助手自动帮办单线Flow定义（草案）",
+  "title": "本地助手自动帮办单线Flow定义",
   "description": "支持历史0.2-rc1/0.3-rc1与canonical 0.4-rc1。每条Flow只允许一个Hook和严格线性的Action数组；group_file_received仅供0.2/0.3 legacy读取，file_received仅供0.4 canonical写入；direct_file_received不是受支持的第三种内部语义。",
   "type": "object",
   "additionalProperties": false,

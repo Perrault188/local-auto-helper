@@ -1,6 +1,6 @@
-# 三个班委预制模板协议草案
+# 三个班委预制模板协议
 
-版本`0.2-rc1`
+当前模板可生成`0.3-rc1`和`0.4-rc1`对象，并保留对`0.2-rc1`数据的读取兼容。
 
 本文件规定模板生成器可以产生的结构。模板只能机械补齐槽位，不能调用大模型，不能添加、重排或串联Flow。
 
@@ -154,7 +154,7 @@
 校验规则
 
 - Flow与读取Action中的`taskAttachmentId`必须相同
-- `hook.params.runAt`应等于附件的`deadlineAt`
+- 催未交任务的`hook.params.runAt`应等于附件的`deadlineAt`。独立提醒使用用户设定的`remindAt`
 - 接收人数组只能由`submissionStatus`为`unsubmitted`的成员用户ID生成
 - 所有接收人使用同一段`text`
 - 未交名单为空时，读取和生成空接收人列表成功，发送步骤记为`skipped`，运行状态取`succeeded_no_action`

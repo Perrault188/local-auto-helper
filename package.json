@@ -1,6 +1,6 @@
 {
   "name": "local-auto-helper",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": false,
   "description": "本地优先的通用自动帮办演示项目",
   "type": "module",
@@ -11,6 +11,7 @@
     "eval:m0:safety": "node tests/evaluation/intent-safety-runner.mjs",
     "eval:m0:hygiene": "node tests/evaluation/intent-dataset-hygiene-probe.mjs",
     "eval:m0:probe": "node tests/evaluation/p2-m0-current-probe.mjs",
+    "eval:mvp": "node tests/evaluation/mvp-case-coverage.mjs",
     "eval:m0:qwen": "node tests/evaluation/intent-qwen-runner.mjs"
   },
   "engines": {

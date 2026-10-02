@@ -56,14 +56,21 @@ test('只提醒 remind：只建一条提醒 Flow，只需提醒时间+文案，�
   assert.equal(flows[0].templateId, 'homework_remind_v1');
   // remind 独立时间：runAt = remindAt，不再 = deadline
   assert.equal(flows[0].hook.params.runAt, '2026-08-01T09:00:00+08:00');
-  // 不建名单/提交记录容器
+  // 不建名单/提交记录容器，附件保留本地创建者作为真实提醒对象。
   assert.equal(result.entityDirectoryId, null);
   assert.equal(result.recordStoreId, null);
   const attachment = await service.attachments.get(result.taskAttachmentId);
   assert.deepEqual(attachment.capabilities, ['remind']);
   assert.equal(attachment.groupId, null);
   assert.equal(attachment.deadlineAt, null);
-  assert.deepEqual(attachment.members, []);
+  assert.equal(attachment.members.length, 1);
+  assert.equal(attachment.members[0].userId, 'local_owner');
+  const [run] = await service.dispatch({
+    schemaVersion: '0.3-rc1', eventId: 'event_pure_remind', type: 'timer_fired', occurredAt: now(),
+    payload: { scheduledFor: flows[0].hook.params.runAt, timezone: 'Asia/Shanghai' }
+  });
+  assert.equal(run.status, 'succeeded');
+  assert.deepEqual(service.adapters.snapshot().directMessages.map(message => message.userId), ['local_owner']);
   service.db.close();
 });
 

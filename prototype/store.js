@@ -1,5 +1,5 @@
 const KEY='local-auto-helper-prototype-0.2-rc1';
-// 真实创建草稿（P0-C）：字段与 engine/docs/创建任务输入契约.md 第2节一一对应。
+// 创建草稿字段与引擎的createAutomationTask输入保持一致。
 // 不再写死固定作业名/截止时间/花名册——初始给空或最小占位，用户输入什么就提交什么。
 export const emptyTaskDraft=()=>({
   taskName:'',                       // 任务名（必填，≤80）
@@ -43,5 +43,6 @@ const AGENT_SESSION_KEY='local-auto-helper-agent-session';
 export function saveAgentSession(value){sessionStorage.setItem(AGENT_SESSION_KEY,JSON.stringify(value))}
 export function loadAgentSession(){try{return JSON.parse(sessionStorage.getItem(AGENT_SESSION_KEY))}catch{return null}}
 export function clearAgentSession(){sessionStorage.removeItem(AGENT_SESSION_KEY)}
+export function clearBrowserState(){localStorage.removeItem(KEY);clearAgentSession();state=initialState();persist()}
 // silent：只改数据并写入 localStorage，不触发订阅者重渲染（用于输入时避免丢焦点）。
 export const store={get:()=>state,update(fn){fn(state);persist()},silent(fn){fn(state);persistSilent()},replace(next){state=next;persist()},reset(){state=initialState();persist()},subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn)}};

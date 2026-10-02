@@ -52,6 +52,11 @@ test('store.update和silent都经过同一安全序列化，凭据只进入sessi
   assert.doesNotMatch(localStorage.getItem('local-auto-helper-prototype-0.2-rc1'), /session-secret/);
   module.clearAgentSession();
   assert.equal(module.loadAgentSession(), null);
+  module.store.update(state => { state.taskDraft.taskName='reset-sensitive-value'; });
+  module.saveAgentSession({draftId:'d2',conversationId:'c2',draftToken:'reset-session-secret'});
+  module.clearBrowserState();
+  assert.doesNotMatch(localStorage.getItem('local-auto-helper-prototype-0.2-rc1'), /reset-sensitive-value/);
+  assert.equal(module.loadAgentSession(), null);
 });
 
 test('adapter运行时只提交optionId，并调用候选、返回和修改端点', async () => {

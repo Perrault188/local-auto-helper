@@ -8,6 +8,7 @@
 
 - 用对话或表单创建自动帮办
 - 支持发布、收取和提醒三类受控能力
+- 独立提醒默认发给创建该任务的当前本地用户
 - 用SQLite保存任务、运行记录和演示文件
 - 用Mock适配器模拟消息和文件动作
 - 默认使用本地规则识别意图
@@ -30,6 +31,8 @@ npm start
 然后打开`http://127.0.0.1:4173`。
 
 服务固定监听本机回环地址。默认数据保存在`demo/local-data`，该目录已加入忽略清单。设置`AUTO_HELPER_DATA_DIR`可以改用其他本地目录。
+
+界面重置会同时清理服务端演示状态、浏览器草稿和当前Agent会话凭据。
 
 ## 可选模型配置
 
@@ -70,9 +73,10 @@ npm test
 npm run eval:m0:rule
 npm run eval:m0:safety
 npm run eval:m0:hygiene
+npm run eval:mvp
 ```
 
-需要真实模型密钥的测试没有包含在默认测试命令中。
+评测集、指标、已知目标差距和复现方法见[EVALUATION.md](EVALUATION.md)。需要真实模型密钥的测试没有包含在默认测试命令中。
 
 ## 许可
 

@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { readFile, stat } from 'node:fs/promises';
-import { extname, join, normalize, resolve } from 'node:path';
+import { extname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { EngineService, loadDemoSeed } from '../engine/index.mjs';
 
@@ -10,6 +10,7 @@ const prototypeDir = join(root, 'prototype');
 const fixturesDir = join(root, 'fixtures');
 const dataDir = process.env.AUTO_HELPER_DATA_DIR || join(root, 'demo', 'local-data');
 const port = Number(process.env.PORT || 4173);
+const csrfToken = randomUUID();
 const service = new EngineService({ dataDir });
 const seed = await loadDemoSeed(fixturesDir);
 const events = JSON.parse(await readFile(join(fixturesDir, 'demo-events.json'), 'utf8'));
@@ -152,6 +153,7 @@ async function snapshot() {
   const flows = await service.flows.list();
   const runs = (await service.runs.list()).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
   return {
+    csrfToken,
     flows: flows.map(publicFlow),
     summaries: await service.listFlowSummaries(),
     runs: runs.map(publicRun),
@@ -162,6 +164,33 @@ async function snapshot() {
     unseenFailureCount: await service.unseenFailureCount(),
     demo: { account: { name: seed.account?.name ?? '用户' }, group: { groupId: seed.group?.groupId, name: seed.group?.name }, events: events.map(({ eventId, type, occurredAt }) => ({ eventId, type, occurredAt })) }
   };
+}
+
+function validateRequestBoundary(req, res) {
+  const allowedHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`]);
+  const allowedOrigins = new Set([...allowedHosts].map(host => `http://${host}`));
+  const host = req.headers.host;
+  if (typeof host !== 'string' || !allowedHosts.has(host.toLowerCase())) {
+    json(res, 403, { error: '请从本机地址访问' });
+    return false;
+  }
+  const origin = req.headers.origin;
+  if (origin !== undefined && (typeof origin !== 'string' || !allowedOrigins.has(origin.toLowerCase()))) {
+    json(res, 403, { error: '禁止跨站请求' });
+    return false;
+  }
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    const contentType = String(req.headers['content-type'] || '').toLowerCase();
+    if (!contentType.startsWith('application/json')) {
+      json(res, 415, { error: '仅接受JSON请求' });
+      return false;
+    }
+    if (origin !== undefined && req.headers['x-local-helper-csrf'] !== csrfToken) {
+      json(res, 403, { error: '请求校验失败' });
+      return false;
+    }
+  }
+  return true;
 }
 
 // Mock文件状态仍不持久化；群消息、私信和回执已由持久MessageLog提供权威投影。
@@ -436,10 +465,17 @@ async function api(req, res, url) {
 }
 
 async function staticFile(res, pathname) {
-  const relative = pathname === '/' ? 'index.html' : decodeURIComponent(pathname.slice(1));
-  const target = normalize(join(prototypeDir, relative));
-  if (!target.startsWith(`${prototypeDir}/`)) return json(res, 403, { error: '禁止访问' });
-  const info = await stat(target);
+  const requested = pathname === '/' ? 'index.html' : decodeURIComponent(pathname.slice(1));
+  const target = resolve(prototypeDir, requested);
+  const relativeTarget = relative(prototypeDir, target);
+  if (relativeTarget.startsWith('..') || isAbsolute(relativeTarget)) return json(res, 403, { error: '禁止访问' });
+  let info;
+  try {
+    info = await stat(target);
+  } catch (error) {
+    if (['ENOENT', 'ENOTDIR', 'EACCES', 'EPERM'].includes(error.code)) return json(res, 404, { error: '页面不存在' });
+    throw error;
+  }
   if (!info.isFile()) throw Object.assign(new Error('页面不存在'), { status: 404 });
   res.writeHead(200, { ...securityHeaders, 'content-type': types[extname(target)] || 'application/octet-stream', 'cache-control': 'no-store' });
   res.end(await readFile(target));
@@ -455,13 +491,14 @@ export async function createDemoServer() {
   await restoreConfiguredMockInputs();
   const server = createServer(async (req, res) => {
     try {
+      if (!validateRequestBoundary(req, res)) return;
       const url = new URL(req.url, 'http://localhost');
       if (url.pathname.startsWith('/api/')) { const handled = await api(req, res, url); if (handled === false) json(res, 404, { error: '接口不存在' }); }
       else await staticFile(res, url.pathname);
     } catch (error) {
       // 创建校验失败：透传结构化 errors（field/code/message/row/index），前端就地高亮。
       if (Array.isArray(error.errors)) return json(res, 422, { errors: error.errors });
-      json(res, error.status || 400, { error: error.message });
+      json(res, error.status || 400, { error: error.status ? error.message : '请求处理失败' });
     }
   });
   // 调度执行与 HTTP 写操作共用同一串行队列，避免状态变更和到点扫描交错。

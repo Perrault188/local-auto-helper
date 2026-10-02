@@ -1,4 +1,4 @@
-import { store } from './store.js';
+import { store, clearBrowserState } from './store.js';
 
 const VERSION = '0.3-rc1';
 let state = { flows: [], summaries: [], runs: [], attachments: [], adapters: { files: [], groupMessages: [], directMessages: [], replies: [], timerEvents: [] }, unseenFailureCount: 0, demo: {} };
@@ -6,7 +6,10 @@ const runtime = { conversations: [], messages: new Map(), evidence: new Map() };
 const clone = value => structuredClone(value);
 
 async function request(path, options) {
-  const response = await fetch(path, { headers: { 'content-type': 'application/json' }, ...options });
+  const method = options?.method || 'GET';
+  const headers = { 'content-type': 'application/json', ...(options?.headers || {}) };
+  if (method !== 'GET' && state.csrfToken) headers['x-local-helper-csrf'] = state.csrfToken;
+  const response = await fetch(path, { ...options, headers });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || '本地服务请求失败');
   state = data.state || data;
@@ -20,6 +23,7 @@ class AgentRequestError extends Error {
 }
 async function agentRequest(path, { method = 'GET', body, auth } = {}) {
   const headers = { 'content-type': 'application/json' };
+  if (method !== 'GET' && state.csrfToken) headers['x-local-helper-csrf'] = state.csrfToken;
   if (auth) {
     headers['x-agent-conversation-id'] = auth.conversationId;
     headers['x-agent-draft-token'] = auth.draftToken;
@@ -52,13 +56,9 @@ function syncRuntimeContext() {
 // ============================================================================
 // P0-C 前端侧：从零创建真实任务
 //
-// 严格按 engine/docs/创建任务输入契约.md 构造入参并消费 CreationValidationError。
-// 对接方式（本轮选 a）：
-//   通过 adapter 调用引擎创建能力。engine 本轮只交付方法级接口 createAutomationTask，
-//   HTTP 端点接线属于后续 qa 会话工作。因此这里先按契约把请求结构与错误处理做好，
-//   尝试真实端点 POST /api/automation-tasks；若端点尚未接通（404/未实现），
-//   自动回退到本地占位校验器，产出与引擎完全一致的结构化错误结构，供前端就地提示。
-//   待 qa 接通端点后无需改前端即可联调。
+// 按引擎createAutomationTask契约构造入参并处理CreationValidationError。
+// 默认调用POST /api/automation-tasks真实落库。仅在前端被单独静态预览时，
+// 使用本地校验器返回同结构错误，不伪造创建成功。
 // ============================================================================
 
 // 与引擎 CreationValidationError 结构一致的前端错误对象（name/code/errors）。
@@ -142,7 +142,7 @@ function validateCreateInputLocally(input) {
 async function tryCreateEndpoint(input) {
   let response;
   try {
-    response = await fetch('/api/automation-tasks', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(input) });
+    response = await fetch('/api/automation-tasks', { method: 'POST', headers: { 'content-type': 'application/json', 'x-local-helper-csrf': state.csrfToken }, body: JSON.stringify(input) });
   } catch {
     return { wired: false };
   }
@@ -222,7 +222,7 @@ export const adapter = {
   },
   evidence(automationId) { return clone(runtime.evidence.get(automationId) || null); },
   async createArchive(automationId) {
-    const response = await fetch(`/api/automation-tasks/${encodeURIComponent(automationId)}/archive`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    const response = await fetch(`/api/automation-tasks/${encodeURIComponent(automationId)}/archive`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-local-helper-csrf': state.csrfToken }, body: '{}' });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'ZIP生成失败');
     return data;
@@ -319,21 +319,21 @@ export const adapter = {
   listAutomations() { return (state.automations || []).slice(); },
   getAutomation(id) { return (state.automations || []).find(a => a.automationId === id) || null; },
   async setAutomationStatus(automationId, status) {
-    const response = await fetch(`/api/automation-tasks/${automationId}/status`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
+    const response = await fetch(`/api/automation-tasks/${automationId}/status`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-local-helper-csrf': state.csrfToken }, body: JSON.stringify({ status }) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || data.message || '状态变更失败');
     if (data.state) { state = data.state; window.dispatchEvent(new CustomEvent('engine-state-changed')); }
     return data.view;
   },
   async editAutomation(automationId, patch) {
-    const response = await fetch(`/api/automation-tasks/${automationId}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) });
+    const response = await fetch(`/api/automation-tasks/${automationId}`, { method: 'PATCH', headers: { 'content-type': 'application/json', 'x-local-helper-csrf': state.csrfToken }, body: JSON.stringify(patch) });
     const data = await response.json();
     if (!response.ok) { if (Array.isArray(data.errors)) throw new CreationValidationError(data.errors); throw new Error(data.error || data.message || '编辑失败'); }
     if (data.state) { state = data.state; window.dispatchEvent(new CustomEvent('engine-state-changed')); }
     return data.view;
   },
   async addAutomationCapability(automationId, capability, options = {}) {
-    const response = await fetch(`/api/automation-tasks/${automationId}/capabilities`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ capability, ...options }) });
+    const response = await fetch(`/api/automation-tasks/${automationId}/capabilities`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-local-helper-csrf': state.csrfToken }, body: JSON.stringify({ capability, ...options }) });
     const data = await response.json();
     if (!response.ok) { if (Array.isArray(data.errors)) throw new CreationValidationError(data.errors); throw new Error(data.error || data.message || '追加能力失败'); }
     if (data.state) { state = data.state; window.dispatchEvent(new CustomEvent('engine-state-changed')); }
@@ -371,7 +371,7 @@ export const adapter = {
     await this.loadConversations();
     return data.run;
   },
-  async reset() { localStorage.removeItem('local-auto-helper-prototype-0.2-rc1'); store.reset(); await request('/api/reset', { method: 'POST' }); },
+  async reset() { const result = await request('/api/reset', { method: 'POST', body: '{}' }); clearBrowserState(); runtime.conversations = []; runtime.messages.clear(); runtime.evidence.clear(); return result; },
   snapshot() { return clone(state); },
   messages() {
     const group = state.adapters.groupMessages.map(message => ({ from: state.demo.account?.name || '演示用户', text: message.text, file: message.filePath.split('/').pop() }));

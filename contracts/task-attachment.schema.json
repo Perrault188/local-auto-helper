@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://local-auto-helper.local/contracts/task-attachment.schema.json",
-  "title": "作业任务附件（草案）",
-  "description": "版本0.2-rc1 / 0.3-rc1。受控业务附件，不含Flow调度信息。用户ID为人员唯一标识，唯一性由应用层校验。0.3-rc1（A2 彻底档）新增可选 capabilities，按能力裁剪必填字段：只 publish/collect 需 groupId；publish 需 publishAt；仅催未交闭环(collect+remind)需 deadlineAt；仅 collect 需非空 members；纯 remind/publish 允许 groupId/deadlineAt 为 null、members 为空。缺省 capabilities 视为全能力，等价 0.2-rc1 全必填。",
+  "title": "作业任务附件",
+  "description": "版本0.2-rc1 / 0.3-rc1。受控业务附件，不含Flow调度信息。用户ID为人员唯一标识，唯一性由应用层校验。0.3-rc1新增可选capabilities，按能力裁剪必填字段。只有publish或collect需要groupId，publish需要publishAt，collect和remind的催未交闭环需要deadlineAt，collect需要非空members。纯remind由创建服务加入当前本地用户，避免成功运行却无提醒对象。缺省capabilities视为全能力，与0.2-rc1兼容。",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "taskAttachmentId", "taskName", "groupId", "publishAt", "deadlineAt", "members", "createdAt", "updatedAt"],

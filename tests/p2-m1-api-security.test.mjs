@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { request as httpRequest } from 'node:http';
 import { EngineService } from '../engine/index.mjs';
 
 const port = 43381;
@@ -53,9 +54,46 @@ const expectNoRuntimeFacts = async () => {
   assert.equal(Object.values(audit.projection).every(items => items.length === 0), true);
   return audit;
 };
+const rawStatus = headers => new Promise((resolve, reject) => {
+  const request = httpRequest({ hostname: '127.0.0.1', port, path: '/api/state', headers }, response => {
+    response.resume();
+    response.on('end', () => resolve(response.statusCode));
+  });
+  request.on('error', reject);
+  request.end();
+});
 
 before(async () => { dataDir = await mkdtemp(join(tmpdir(), 'local-auto-helper-p2-m1-api-security-')); child = await startServer(); });
 after(() => stopServer(child));
+
+test('本地HTTP边界拒绝伪造Host、跨站写入和缺失CSRF校验的同源写入', async () => {
+  assert.equal(await rawStatus({ host: 'attacker.example' }), 403);
+
+  const crossSite = await fetch(`${base}/api/reset`, {
+    method: 'POST',
+    headers: { origin: 'https://attacker.example', 'content-type': 'application/x-www-form-urlencoded' },
+    body: 'reset=1'
+  });
+  assert.equal(crossSite.status, 403);
+
+  const state = await req('/api/state');
+  assert.equal(typeof state.data.csrfToken, 'string');
+  const missingToken = await req('/api/reset', 'POST', {}, { origin: base });
+  assert.equal(missingToken.status, 403);
+  const accepted = await req('/api/reset', 'POST', {}, { origin: base, 'x-local-helper-csrf': state.data.csrfToken });
+  assert.equal(accepted.ok, true);
+});
+
+test('静态404只返回固定公开错误，不泄漏本地绝对路径', async () => {
+  const response = await fetch(`${base}/missing-public-file.txt`);
+  assert.equal(response.status, 404);
+  const text = await response.text();
+  assert.equal(text.includes('/Users/'), false);
+  assert.equal(text.includes('local-auto-helper'), false);
+
+  const traversal = await fetch(`${base}/%2e%2e%2fpackage.json`);
+  assert.equal(traversal.status, 403);
+});
 
 test('P2-M1红灯：Agent草稿不进入业务会话API，公开状态不泄漏凭据与草稿原文', async () => {
   const secret = 'P2M1_HTTP_AGENT_SECRET';

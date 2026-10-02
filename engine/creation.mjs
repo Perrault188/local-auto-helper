@@ -53,6 +53,7 @@ const EXTENSION_PATTERN = /^\.[A-Za-z0-9]+$/;
 // 文件名模板：禁止路径分隔符与常见非法字符，只允许声明占位符与安全字符。
 const ILLEGAL_NAME_CHARS = /[\\/:*?"<>|]/;
 const ALLOWED_PLACEHOLDERS = /{(?:studentId|name|originalExtension)}/g;
+const LOCAL_OWNER = { userId: 'local_owner', name: '当前用户', studentId: 'OWNER' };
 
 const isNonEmptyString = value => typeof value === 'string' && value.trim().length > 0;
 
@@ -163,6 +164,8 @@ export function validateCreateAutomationTaskInput(input) {
   if (errors.length > 0) throw new CreationValidationError(errors);
 
   const validRoster = Array.isArray(roster) ? roster : [];
+  // 独立提醒面向创建该任务的本地用户。若保留空名单，执行器会将任务标记为成功却不发送任何提醒。
+  const effectiveRoster = !needRoster && has('remind') ? [LOCAL_OWNER] : validRoster;
   const remindAtResolved = has('remind') ? (input.remindAt ?? (needDeadline ? input.deadlineAt : null)) : null;
   return {
     domain: input.domain ?? 'education',
@@ -179,7 +182,7 @@ export function validateCreateAutomationTaskInput(input) {
     remindText: has('remind') ? input.remindText : null,
     replyText: has('collect') && isNonEmptyString(input.replyText) ? input.replyText.trim() : '收到，已帮你登记',
     remindAt: remindAtResolved,
-    roster: validRoster.map(m => ({ userId: String(m.userId), name: m.name.trim(), studentId: String(m.studentId) })),
+    roster: effectiveRoster.map(m => ({ userId: String(m.userId), name: m.name.trim(), studentId: String(m.studentId) })),
     // 发布触发方式：'self_message'(发出关键词触发) | 'scheduled'(到设定时间触发)。默认 self_message。
     // scheduled 复用 publishAt 作为定时触发时间（publish 选中时 publishAt 已必填且校验合法）。
     publishTrigger,

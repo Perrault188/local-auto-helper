@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://local-auto-helper.local/contracts/run-record.schema.json",
-  "title": "自动帮办单次运行记录（草案）",
+  "title": "自动帮办单次运行记录",
   "description": "版本0.2-rc1 / 0.3-rc1。Action按数组顺序执行，保存Flow和事件快照；失败后尚未执行的步骤记为skipped。快照按创建时的版本保存，历史快照不被升级污染。",
   "type": "object",
   "additionalProperties": false,
